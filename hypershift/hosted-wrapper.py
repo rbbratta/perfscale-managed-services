@@ -224,8 +224,15 @@ def _build_cluster(hypershift_cmnd, kubeconfig_location, cluster_name_seed, mgmt
     os.mkdir(cluster_path)
     logging.debug('Attempting cluster installation')
     logging.debug('Output directory set to %s' % cluster_path)
+    version = myenv["OCP_RELEASE"]
     cluster_name = cluster_name_seed + "-" + str(my_inc).zfill(4)
-    cluster_cmd = [hypershift_cmnd, "create", "cluster", "aws", "--name", cluster_name, "--base-domain", mgmt_cluster_base_domain, "--additional-tags", "mgmt-cluster=" + mgmt_cluster_name, "--aws-creds", my_path + '/aws_creds', "--pull-secret", pull_secret_file, "--region", mgmt_cluster_aws_zone, "--node-pool-replicas", str(worker_nodes), '--wait', '--timeout', '30m']
+    cluster_cmd = [hypershift_cmnd, "create", "cluster", "aws", "--name", cluster_name,
+                   "--base-domain", mgmt_cluster_base_domain, "--additional-tags",
+                   "mgmt-cluster=" + mgmt_cluster_name, "--aws-creds",
+                   my_path + '/aws_creds', "--pull-secret", pull_secret_file,
+                   "--release-image", version,
+                   "--region", mgmt_cluster_aws_zone, "--node-pool-replicas",
+                   str(worker_nodes), '--wait', '--timeout', '30m']
     if args.wildcard_options:
         for param in args.wildcard_options.split():
             cluster_cmd.append(param)
