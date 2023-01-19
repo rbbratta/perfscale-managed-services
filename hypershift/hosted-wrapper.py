@@ -483,6 +483,7 @@ def _cleanup_cluster(hypershift_cmnd, kubeconfig, mgmt_cluster_name, cluster_nam
 
 
 def main():
+    os.chdir(os.environ["WORKSPACE"])
     parser = argparse.ArgumentParser(description="hypershift wrapper script",
                                      parents=[parentParsers.esParser,
                                               parentParsers.runnerParser,
