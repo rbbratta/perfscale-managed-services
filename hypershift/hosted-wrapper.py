@@ -188,9 +188,9 @@ def _build_cluster(hypershift_cmnd, kubeconfig_location, cluster_name_seed, mgmt
     try:
         with open(cluster_path + "/metadata_install.json", "w") as metadata_file:
             json.dump(metadata, metadata_file)
-    except Exception as err:
-        logging.error(err)
-        logging.error('Failed to write metadata_install.json file located %s' % cluster_path)
+    except Exception:
+        logging.exception('Failed to write metadata_install.json file located %s' ,
+                  cluster_path)
     metadata['cluster_name'] = cluster_name
     metadata['mgmt_cluster_name'] = mgmt_cluster_name
     metadata['job_iterations'] = str(job_iterations) if cluster_load else 0
