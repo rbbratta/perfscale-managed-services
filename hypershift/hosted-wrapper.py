@@ -34,6 +34,8 @@ from libs import common
 from libs import parentParsers
 from random import randrange
 
+import yaml
+
 
 def _verify_cmnds(ocm_cmnd, hypershift_cmnd, my_path, ocm_version, hypershift_version):
     # If the command path was not given, download latest binary from github
@@ -108,7 +110,57 @@ def _verify_cmnds(ocm_cmnd, hypershift_cmnd, my_path, ocm_version, hypershift_ve
     return (ocm_cmnd, hypershift_cmnd)
 
 
-def _get_mgmt_cluster_info(ocm_cmnd, mgmt_cluster, es, index, index_retry, uuid, hostedclusters):
+def _get_mgmt_cluster_info(
+    ocm_cmnd, mgmt_cluster, es, index, index_retry, uuid, hostedclusters
+):
+    logging.info('Getting Management Cluster Information from %s' % mgmt_cluster)
+
+    infra = json.loads(
+        subprocess.run(
+            ["oc", "get", "infrastructure", "-o", "json"],
+            capture_output=True,
+            text=True,
+        ).stdout
+    )["items"][0]
+    cluster_version = json.loads(
+        subprocess.run(
+            ["oc", "get", "clusterversion", "-o", "json"],
+            capture_output=True,
+            text=True,
+        ).stdout
+    )["items"][0]
+    network_operator = json.loads(
+        subprocess.run(
+            ["oc", "get", "network.operator", "-o", "json"],
+            capture_output=True,
+            text=True,
+        ).stdout
+    )["items"][0]
+    install_config = yaml.safe_load(
+        subprocess.run(
+            ["oc", "-n", "kube-system", "extract", "cm/cluster-config-v1", "--to=-"],
+            capture_output=True,
+            text=True,
+        ).stdout
+    )
+
+    metadata = {
+        'uuid': uuid, 'cluster_name': infra["status"]["infrastructureName"],
+        'cluster_id': infra["status"]["infrastructureName"],
+        'version': cluster_version["status"]["history"][0]["version"],
+        'base_domain': install_config["baseDomain"],
+        'aws_region': infra["status"]["platformStatus"]["aws"]["region"],
+        'network_type': network_operator["spec"]["defaultNetwork"]["type"],
+        "timestamp": datetime.datetime.utcnow().isoformat(),
+        'hostedclusters': hostedclusters
+    }
+    es_ignored_metadata = ""
+    if es is not None:
+        common._index_result(es, index, metadata, es_ignored_metadata, index_retry)
+    return metadata
+
+
+def _get_mgmt_cluster_info_from_ocm(ocm_cmnd, mgmt_cluster, es, index, index_retry, uuid, hostedclusters):
     logging.info('Getting Management Cluster Information from %s' % mgmt_cluster)
     ocm_command = [ocm_cmnd, "get", "/api/clusters_mgmt/v1/clusters"]
     logging.debug(ocm_command)
