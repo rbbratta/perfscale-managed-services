@@ -596,8 +596,8 @@ def main():
 
     my_path = args.path
     if my_path is None:
-        my_path = '/tmp/' + my_uuid
-    logging.info('Using %s as working directory' % (my_path))
+        my_path = os.path.join(os.environ.get("WORKSPACE", '/tmp/'), my_uuid)
+    logging.info('Using %s as working directory' ,my_path)
     common._create_path(my_path)
 
     try:
