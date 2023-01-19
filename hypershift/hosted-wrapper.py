@@ -12,6 +12,7 @@
 #   limitations under the License.
 
 import argparse
+import pprint
 import time
 import datetime
 import subprocess
@@ -420,26 +421,29 @@ def _get_dump_cluster(kubeconfig, hypershift_cmd, my_path, cluster_name):
 def get_metadata(kubeconfig, my_path, duration, cluster_name, uuid, operation):
     myenv = os.environ.copy()
     myenv["KUBECONFIG"] = kubeconfig
-    metadata = {}
     logging.info('Getting information for hosted cluster %s' % cluster_name)
     metadata_hosted = ["oc", "get", "hostedcluster", "-n", "clusters", cluster_name, "-o", "json"]
     logging.debug(metadata_hosted)
     metadata_hosted_process = subprocess.Popen(metadata_hosted, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=myenv)
     metadata_hosted_stdout, metadata_hosted_stderr = metadata_hosted_process.communicate()
+    metadata_hosted_info = {}
     try:
         metadata_hosted_info = json.loads(metadata_hosted_stdout)
+    except json.JSONDecodeError:
+        logging.error("Cannot load metadata for cluster %s" , cluster_name)
+        sys.stdout.write(metadata_hosted_stdout)
+        sys.stderr.write(metadata_hosted_stderr)
+    metadata = {"duration": duration, "operation": operation, "uuid": uuid}
+    try:
         metadata["cluster_name"] = metadata_hosted_info['metadata']['name']
         metadata["network_type"] = metadata_hosted_info['spec']['networking']['networkType']
         metadata["control_plane_topology"] = metadata_hosted_info['spec']['controllerAvailabilityPolicy']
         metadata["infrastructure_topology"] = metadata_hosted_info['spec']['infrastructureAvailabilityPolicy']
         metadata["status"] = metadata_hosted_info['status']['version']['history'][0]['state']
         metadata["version"] = metadata_hosted_info['status']['version']['history'][0]['version']
-    except Exception as err:
-        logging.error("Cannot load metadata for cluster %s" % cluster_name)
-        logging.error(err)
-    metadata["duration"] = duration
-    metadata["operation"] = operation
-    metadata["uuid"] = uuid
+    except KeyError:
+        logging.exception("")
+        pprint.pprint(metadata_hosted_info)
     return metadata
 
 
