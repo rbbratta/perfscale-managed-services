@@ -185,7 +185,7 @@ def _get_mgmt_cluster_info_from_ocm(ocm_cmnd, mgmt_cluster, es, index, index_ret
                 else: # when autoscaling enabled
                     metadata['workers'] = cluster['nodes']['autoscale_compute']['min_replicas']
                     metadata['workers_min'] = cluster['nodes']['autoscale_compute']['min_replicas']
-                    metadata['workers_max'] = cluster['nodes']['autoscale_compute']['max_replicas']                
+                    metadata['workers_max'] = cluster['nodes']['autoscale_compute']['max_replicas']
                 metadata['workers_type'] = cluster['nodes']['compute_machine_type']['id']
                 metadata['network_type'] = cluster['network']['type']
                 # metadata["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%S")
