@@ -515,7 +515,8 @@ def main():
     parser.add_argument(
         '--mgmt-kubeconfig',
         type=str,
-        help='Hypershift Management Cluster kubeconfig file path')
+        help='Hypershift Management Cluster kubeconfig file path',
+        default=os.environ["KUBECONFIG"])
     parser.add_argument(
         '--workers',
         type=str,
